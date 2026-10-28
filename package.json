@@ -1,0 +1,11 @@
+{
+  "name": "firtnite",
+  "version": "0.1.0",
+  "description": "A Fortnite-style battle royale that runs in the browser.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node tools/serve.mjs 8080"
+  },
+  "license": "MIT"
+}
