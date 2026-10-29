@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Fortnight</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%232a7cf0%22/%3E%3Cpath d=%22M9 6h15v5H15v4h8v5h-8v6H9z%22 fill=%22%23ffe14a%22/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;1,800&family=Lilita+One&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js" } }</script>
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="hud" hidden>
+  <div id="storm-overlay"></div>
+  <div id="damage-vignette"></div>
+  <div id="scope" hidden></div>
+  <div id="crosshair"><i class="ch t"></i><i class="ch b"></i><i class="ch l"></i><i class="ch r"></i><i class="dot"></i></div>
+  <div id="hitmarker"></div>
+  <div id="dmg-dirs"></div>
+  <div id="dmgnums"></div>
+
+  <div id="top-right">
+    <canvas id="minimap" width="180" height="180"></canvas>
+    <div id="storm-info"><span id="storm-text">Storm in</span> <b id="storm-time"></b></div>
+    <div id="match-info">
+      <div class="stat"><span class="label">Alive</span><b id="alive">0</b></div>
+      <div class="stat"><span class="label">Elims</span><b id="kills">0</b></div>
+    </div>
+  </div>
+
+  <div id="killfeed"></div>
+  <div id="pickup-feed"></div>
+  <div id="center-msg"></div>
+  <div id="bus-hint" hidden></div>
+  <button id="spectate" hidden></button>
+  <div id="toast"></div>
+
+  <div id="prompt" hidden><kbd>E</kbd><span id="prompt-text"></span></div>
+  <div id="usebar" hidden><div id="usebar-fill"></div><span id="usebar-label"></span></div>
+  <div id="target-hp" hidden><div id="target-hp-fill"></div></div>
+
+  <div id="vitals">
+    <div class="bar shield"><div class="fill" id="shield-fill"></div><span class="num" id="shield-num">0</span></div>
+    <div class="bar health"><div class="fill" id="health-fill"></div><span class="num" id="health-num">100</span></div>
+  </div>
+
+  <div id="bottom-right">
+    <div id="mats">
+      <div class="mat" data-mat="wood"><i></i><b id="mat-wood">0</b></div>
+      <div class="mat" data-mat="stone"><i></i><b id="mat-stone">0</b></div>
+      <div class="mat" data-mat="metal"><i></i><b id="mat-metal">0</b></div>
+    </div>
+    <div id="ammo-readout"><b id="ammo-mag"></b><span id="ammo-reserve"></span></div>
+    <div id="buildbar" hidden></div>
+    <div id="hotbar"></div>
+  </div>
+
+  <canvas id="bigmap" width="640" height="640" hidden></canvas>
+</div>
+
+<div id="touch-ui" hidden>
+  <div id="joy-base"><div id="joy-knob"></div></div>
+  <button class="tbtn fire" id="t-fire" data-code="Mouse0" data-look="1">FIRE</button>
+  <button class="tbtn fire-l" id="t-fire-l" data-code="Mouse0">FIRE</button>
+  <button class="tbtn" id="t-jump" data-code="Space">JUMP</button>
+  <button class="tbtn" id="t-aim" data-code="Mouse2" data-toggle="1">AIM</button>
+  <button class="tbtn" id="t-reload" data-code="KeyR" data-tap="1">RELOAD</button>
+  <button class="tbtn" id="t-use" data-code="KeyE" data-tap="1">USE</button>
+  <button class="tbtn" id="t-build" data-code="KeyQ" data-tap="1">BUILD</button>
+  <div id="t-pieces">
+    <button class="tbtn" data-code="KeyZ" data-tap="1">WALL</button>
+    <button class="tbtn" data-code="KeyX" data-tap="1">FLOOR</button>
+    <button class="tbtn" data-code="KeyC" data-tap="1">RAMP</button>
+    <button class="tbtn" data-code="KeyV" data-tap="1">ROOF</button>
+    <button class="tbtn" data-code="KeyG" data-tap="1">MAT</button>
+  </div>
+  <button class="tbtn small" id="t-map" data-code="KeyM" data-tap="1">MAP</button>
+  <button class="tbtn small" id="t-pause">II</button>
+</div>
+
+<div id="menu" class="screen">
+  <div class="menu-inner">
+    <div class="brand">
+      <h1>FORTNIGHT</h1>
+      <p class="tag">Drop in. Loot up. Build fast. Be the last one standing.</p>
+    </div>
+    <button id="play-btn" class="play">PLAY</button>
+    <div class="settings">
+      <label>Lobby <input id="set-bots" type="range" min="4" max="59" step="1"><output id="set-bots-val"></output></label>
+      <label>Bot skill
+        <select id="set-diff"><option value="easy">Easy</option><option value="normal">Normal</option><option value="hard">Hard</option></select>
+      </label>
+      <label>Look sensitivity <input id="set-sens" type="range" min="0.2" max="3" step="0.05"><output id="set-sens-val"></output></label>
+      <label>Volume <input id="set-vol" type="range" min="0" max="1" step="0.05"><output id="set-vol-val"></output></label>
+      <label>Graphics
+        <select id="set-quality"><option value="auto">Auto</option><option value="high">High (shadows)</option><option value="low">Low (faster)</option></select>
+      </label>
+    </div>
+    <button id="controls-btn" class="link">Controls</button>
+    <div id="controls" hidden>
+      <div class="cols">
+        <dl>
+          <dt>WASD</dt><dd>Move</dd>
+          <dt>Shift</dt><dd>Sprint</dd>
+          <dt>Space</dt><dd>Jump · drop from bus · glider</dd>
+          <dt>Mouse</dt><dd>Look · LMB fire · RMB aim</dd>
+          <dt>1 – 6 / wheel</dt><dd>Pickaxe and inventory slots</dd>
+          <dt>R</dt><dd>Reload</dd>
+          <dt>E</dt><dd>Open chest · pick up</dd>
+        </dl>
+        <dl>
+          <dt>Q</dt><dd>Toggle build mode</dd>
+          <dt>Z X C V</dt><dd>Wall · floor · ramp · roof</dd>
+          <dt>LMB (hold)</dt><dd>Place pieces</dd>
+          <dt>RMB / G</dt><dd>Switch wood · stone · metal</dd>
+          <dt>F</dt><dd>Pickaxe (harvest materials)</dd>
+          <dt>M</dt><dd>Map</dd>
+          <dt>Esc</dt><dd>Pause</dd>
+        </dl>
+      </div>
+      <p class="hint">On a phone or tablet: left thumb moves, drag anywhere on the right to look, buttons for everything else.</p>
+    </div>
+  </div>
+</div>
+
+<div id="rotate-hint">Turn your device sideways to play</div>
+
+<div id="loading" class="screen" hidden><div class="loading-text">Warming up the battle bus…</div></div>
+
+<div id="pause" class="screen" hidden>
+  <div class="panel">
+    <h2>PAUSED</h2>
+    <button id="resume-btn" class="play">RESUME</button>
+    <div class="settings">
+      <label>Look sensitivity <input id="pause-sens" type="range" min="0.2" max="3" step="0.05"><output id="pause-sens-val"></output></label>
+      <label>Volume <input id="pause-vol" type="range" min="0" max="1" step="0.05"><output id="pause-vol-val"></output></label>
+    </div>
+    <button id="quit-btn" class="link">Quit to menu</button>
+  </div>
+</div>
+
+<div id="endscreen" class="screen" hidden>
+  <div class="panel">
+    <div id="end-place">#1</div>
+    <h2 id="end-title">VICTORY!</h2>
+    <p id="end-sub"></p>
+    <div class="end-stats">
+      <div><b id="end-kills">0</b><span>Eliminations</span></div>
+      <div><b id="end-time">0:00</b><span>Survived</span></div>
+      <div><b id="end-players">0</b><span>Players</span></div>
+    </div>
+    <p id="end-winner"></p>
+    <div class="end-buttons">
+      <button id="again-btn" class="play">PLAY AGAIN</button>
+      <button id="end-spectate" class="secondary">SPECTATE</button>
+      <button id="menu-btn" class="link">Main menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="webgl-error" class="screen" hidden>
+  <div class="panel"><h2>WebGL unavailable</h2><p>Fortnight needs WebGL. Try a recent Chrome, Edge, Firefox or Safari with hardware acceleration enabled.</p></div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

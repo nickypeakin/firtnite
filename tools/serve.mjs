@@ -24,4 +24,4 @@ createServer(async (req, res) => {
     res.writeHead(404, { 'Content-Type': 'text/plain' });
     res.end('Not found');
   }
-}).listen(port, () => console.log(`Firtnite running at http://localhost:${port}`));
+}).listen(port, () => console.log(`Fortnight running at http://localhost:${port}`));

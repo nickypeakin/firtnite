@@ -1,11 +1,15 @@
 {
-  "name": "firtnite",
-  "version": "0.1.0",
+  "name": "fortnight",
+  "version": "0.2.0",
   "description": "A Fortnite-style battle royale that runs in the browser.",
   "private": true,
   "type": "module",
   "scripts": {
+    "build": "node tools/build.mjs",
     "start": "node tools/serve.mjs 8080"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
   },
   "license": "MIT"
 }

@@ -6,7 +6,7 @@ import { formatTime } from './util.js';
 
 const $ = (id) => document.getElementById(id);
 const DEFAULTS = { sensitivity: 1, volume: 0.7, bots: 39, difficulty: 'normal', quality: 'auto' };
-const STORE_KEY = 'firtnite-settings';
+const STORE_KEY = 'fortnight-settings';
 
 function loadSettings() {
   try {
@@ -236,7 +236,7 @@ function frame(now) {
 requestAnimationFrame(frame);
 
 // Handy for debugging from the console.
-window.firtnite = {
+window.fortnight = {
   get game() { return game; },
   start: startGame,
   settings,

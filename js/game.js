@@ -81,7 +81,7 @@ export class Game {
     this.player = new PlayerController(this, me, this.settings);
     this.hud = new HUD(this);
     this.hud.show(true);
-    this.hud.centerMessage('Welcome to Firtnite!', 3);
+    this.hud.centerMessage('Welcome to Fortnight!', 3);
     this.audio.play('horn');
   }
 
